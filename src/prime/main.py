@@ -3,7 +3,7 @@ from random import choice
 
 # Define Variables
 
-separation: int = 10
+separation: int = 3
 
 # Define Character Code
 
@@ -41,7 +41,7 @@ def _decode(text: str) -> str:
 
 def decode(text: str, separation: int) -> list:
   raw = _decode(text)
-  sep = [int(raw[x:x+separation]) for x in range(0, len(raw), separation)]
+  sep = [int(raw[x:x+2*separation]) for x in range(0, len(raw), 2*separation)]
   return sep
 
 def encode(text: str) -> str:
@@ -101,7 +101,7 @@ def calc_pqe(plain: int) -> tuple:
   p: int = 0
   q: int = 0
   e: int = 0
-  primelist = [i for i in sieve.primerange(2, 10 ** separation * 5)]
+  primelist = [i for i in sieve.primerange(2, 10 ** (2*separation) * 5)]
   while True:
     p = choice(primelist)
     q = choice(primelist)
@@ -112,7 +112,7 @@ def calc_pqe(plain: int) -> tuple:
 
 if __name__ == '__main__':
   plain_text = input("平文: ")
-  plain = decode(plain_text, separation)
+  plain = decode(plain_text, 2*separation)
   print(f"平文 (decoded): {plain}")
 
   p, q, e = calc_pqe(plain[0])

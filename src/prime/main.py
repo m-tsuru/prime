@@ -1,9 +1,29 @@
 from sympy import sieve, nextprime # type: ignore
 from random import choice
+import argparse
+import sys
+
+# Parse Command Line Arguments
+parser = argparse.ArgumentParser(description="Learn Encryption with Prime Factorization")
+
+## Mode
+parser.add_argument("--int", help="Interactive Mode", action='store_true')
+parser.add_argument("--enc", help="Encryption Mode (Non-Interactive)", action='store_true')
+parser.add_argument("--dec", help="Decription Mode (Non-Interactive)", action='store_true')
+
+## Values
+parser.add_argument("-s", help="Separation Value (Default: 3)", type=int, default=3)
+parser.add_argument("-n", help="Public Key", type=int, default=None)
+parser.add_argument("-d", help="Secret Key", type=int, default=None)
+parser.add_argument("target", help="When non Interactive Mode, Enc/Dec Value", nargs='*', type=str, default=None)
+args = parser.parse_args()
+
 
 # Define Variables
 
 separation: int = 3
+if args.s is not None:
+  separation = args.s
 
 # Define Character Code
 
@@ -111,28 +131,58 @@ def calc_pqe(plain: int) -> tuple:
   return p, q, e
 
 if __name__ == '__main__':
-  plain_text = input("平文: ")
-  plain = decode(plain_text, 2*separation)
-  print(f"平文 (decoded): {plain}")
-
-  p, q, e = calc_pqe(plain[0])
-  print(f"p: {p}, q: {q}, e: {e}")
-  n = p * q
-  phi = (p - 1) * (q - 1)
-  print(f"n: {n}, phi: {phi}")
-  d = calculate_d(e, phi)
-  print(f"d: {d}")
-
   encrypted: list = []
-  for pl in plain:
-    _encrypted = encrypt(pl, n, e)
-    encrypted.append(str(_encrypted))
-  print(f"暗号文 (decimal | partial): {encrypted}")
-
   decrypted: str = ""
-  for en in encrypted:
-    _decrypted: str = str(decrypt(int(en), n, d))
-    decrypted += _decrypted
+  if args.int:
+    plain_text = input("平文: ")
+    plain = decode(plain_text, 2*separation)
+    print(f"平文 (decoded): {plain}")
 
-  result = encode(decrypted)
-  print(f"復元文 (encoded): {result}")
+    p, q, e = calc_pqe(plain[0])
+    print(f"p: {p}, q: {q}, e: {e}")
+    n = p * q
+    phi = (p - 1) * (q - 1)
+    print(f"n: {n}, phi: {phi}")
+    d = calculate_d(e, phi)
+    print(f"d: {d}")
+
+    for pl in plain:
+      _encrypted = encrypt(pl, n, e)
+      encrypted.append(str(_encrypted))
+    print(f"暗号文 (decimal | partial): {encrypted}")
+
+    for en in encrypted:
+      _decrypted: str = str(decrypt(int(en), n, d))
+      decrypted += _decrypted
+
+    result = encode(decrypted)
+    print(f"復元文 (encoded): {result}")
+
+  elif args.enc:
+    plain = decode(args.target[0], 2*separation)
+    p, q, e = calc_pqe(plain[0])
+    n = p * q
+    phi = (p - 1) * (q - 1)
+    d = calculate_d(e, phi)
+    print(f"n: {n}, d: {d}")
+    for pl in plain:
+      _encrypted = encrypt(pl, n, e)
+      encrypted.append(str(_encrypted))
+    print(f"暗号文 (Partial): {encrypted}")
+
+  elif args.dec:
+    if args.n is None:
+      print(f"n is required.")
+      sys.exit()
+    elif args.d is None:
+      print(f"d is required.")
+      sys.exit()
+    else:
+      n = args.n
+      d = args.d
+      target = map(int, args.target)
+    for en in target:
+      _decrypted: str = str(decrypt(int(en), args.n, args.d)) # type: ignore
+      decrypted += _decrypted
+    result = encode(decrypted)
+    print(f"復元文 (encoded): {result}")
